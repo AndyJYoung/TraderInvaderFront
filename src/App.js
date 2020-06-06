@@ -1,63 +1,117 @@
-import React, { useState, useEffect } from 'react';
-import logo from './logo.svg';
-import './App.css';
-import { Paper, Grid, TextField, List, 
-  ListItem, ListItemText, Container, IconButton } from '@material-ui/core'
-import { Search } from '@material-ui/icons'
-const axios = require('axios')
+import React, { useEffect, useState } from 'react'
+import { Redirect, Route } from 'react-router-dom'
+import axios from 'axios'
+import Login from './Components/Authentication/Login'
+import UserHome from './Components/Home/UserHome'
+import Forgot from './Components/Authentication/Forgot'
+import Verification from './Components/Authentication/Verification'
+import Create from './Components/Authentication/Create'
+import Change from './Components/Authentication/ChangePass'
+import NewPassVerification from './Components/Authentication/NewPassVerification'
 
-function App() {
-  const [options, setOptions] = useState([])
-  useEffect(() => {
+export default function App() {
+    const [auth, setAuth] = useState(false)
+    const [username, setUsername] = useState('')
+    const [password, setPassword] = useState('')
+    const [confirm, setConfirm] = useState('')
+    const [email, setEmail] = useState('')
+    const [verification, setVerification] = useState('')
+    const [login, setLogin] = useState('')
+    const [createAuth, setCreateAuth] = useState('')
+    const [didCreate, setDidCreate] = useState('')
 
-  })
+    useEffect(() => {
+        (async () => {
+            const token = localStorage.getItem('token');
 
-  const [input, setInput] = useState('')
+            if(token)
+            {
+                try{
+                    const { data } = await axios.get(`/users?access_token=${token}`)
+                    
+                    setUsername(data.data.Username)
 
-  const [stock, setStock] = useState({
-    symbol: 'Search',
-    price: 0.0
-  })
+                    const refresh_token = localStorage.getItem('refresh')
+                
+                    if (refresh_token)
+                    {
+                        const { data } = await axios.put('/users/token', { refresh_token })
+                        
+                        if(data.success)
+                        {
+                            localStorage.setItem('token', data.data.access_token)
+                            setAuth(true);
+                        }
+                    }
+                }
+                catch(err) {
+                    console.log(err)
+                }
+            }
+        })()
+    }, [auth, username])
 
-  const loadStock = async () => {
-    try {
-      let { data } = await axios.get(`https://o5gn70te7h.execute-api.us-west-2.amazonaws.com/latest/stock/${input}`)
-      console.log(data)
-      setStock(data)
-    }
-    catch(err) {
-      console.log(err)
-    }
-  }
-
-  const changeSearch = e => setInput(e.target.value)
-
-  return (
-    <div className="App">
-      <Container style={{padding: '10px'}}>
-        <Grid container direction='column' justify='center' alignItems='center' spacing={2}>
-          <Grid item>
-            <Grid container justify='center' alignItems='center'>
-              <Grid item><TextField onChange={e => changeSearch(e)} variant='outlined' type='search' fullWidth/></Grid>
-              <Grid item>
-                <IconButton onClick={loadStock}>
-                  <Search />
-                </IconButton>
-              </Grid>
-            </Grid>
-          </Grid>
-          <Grid item>
-            <Paper style={{width: '300px'}}>
-              <List>
-                <ListItem><ListItemText primary='Symbol' secondary={stock.symbol}/></ListItem>
-                <ListItem><ListItemText primary='Value' secondary={stock.price} /></ListItem>
-              </List>
-            </Paper>
-          </Grid>
-        </Grid>
-      </Container>
-    </div>
-  );
+    return (
+        <div id='root' style={{backgroundColor: '#9DAF96', height: '100%'}}>
+            { auth && <Redirect to='/app' /> }
+            <Route path='/' exact>
+                <Login 
+                setUsername={setUsername}
+                setPassword={setPassword}
+                setAuth={setAuth}
+                setLogin={setLogin}
+                username={username}
+                password={password}
+                login={login}/>
+            </Route>
+            <Route path='/verification'>
+                <Verification 
+                setVerification={setVerification}
+                username={username}
+                verification={verification}/>
+            </Route>
+            <Route path='/forgot'>
+                <Forgot 
+                setUsername={setUsername}/>
+            </Route>
+            <Route path='/create'>
+                <Create 
+                setUsername={setUsername}
+                setPassword={setPassword}
+                setConfirm={setConfirm}
+                setEmail={setEmail}
+                setCreateAuth={setCreateAuth}
+                setDidCreate={setDidCreate}
+                username={username}
+                password={password}
+                email={email}
+                confirm={confirm}
+                createAuth={createAuth}
+                didCreate={didCreate}/>
+            </Route>
+            <Route path='/changepass'>
+                <Change
+                setPassword={setPassword}
+                setConfirm={setConfirm}
+                password={password}
+                confirm={confirm}/>
+            </Route>
+            <Route path='/newpassverification'>
+                <NewPassVerification
+                setVerification={setVerification}
+                username={username}
+                verification={verification}/>
+            </Route>
+            <Route path='/app'>
+                <UserHome 
+                    setAuth={setAuth}
+                    auth={auth} 
+                    setUsername={setUsername}
+                    setPassword={setPassword}
+                    setLogin={setLogin}
+                    username={username}
+                    login={login} />
+            </Route>
+        </div>
+    )
 }
-
-export default App;
