@@ -1,8 +1,7 @@
 import React, { } from 'react';
-import { List, ListItem, Toolbar, AppBar, TextField, InputAdornment, IconButton, Button, Typography, Grid } from '@material-ui/core'
+import { List, ListItem, TextField, InputAdornment, IconButton, Button, Typography, Grid } from '@material-ui/core'
 import { Link } from 'react-router-dom';
 import { VisibilityOff, Visibility } from '@material-ui/icons'
-import templogo from '../../templogo.png';
 import { makeStyles } from '@material-ui/core/styles';
 import axios from 'axios'
 
@@ -59,7 +58,7 @@ const useStyles = makeStyles({
   },
 });
 
-function NewPassVerification(props) {
+function ChangePassVerification(props) {
   const classes = useStyles()
 
   const [values, setValues] = React.useState({
@@ -70,13 +69,17 @@ function NewPassVerification(props) {
 
   const handleMouseDownPassword = event => { event.preventDefault() }
 
-  const handleVerificationChange = event => { props.setVerification(event.target.value) }
-
   const handleSubmit = () => {
+    const tok = localStorage.getItem('token')
+    
+    console.log(tok)
+    console.log(props.oldpass)
+    console.log(props.password)
 
-    axios.put(`/users/${props.username}/password/update`, {
-      confirmation_code: props.verification,
-      new_password: props.password,
+    axios.put(`/users/${props.username}/password`, {
+      access_token: tok,
+      previous_password: props.oldpass,
+      proposed_password: props.password,
     })
       .then(function (response) {
         console.log(response)
@@ -86,38 +89,40 @@ function NewPassVerification(props) {
   }
 
   return (
-    <div className={classes.root}>
-      <AppBar position='fixed' >
-        <Toolbar position='fixed' className={classes.toolbar}>
-          <Link to='/'>
-            <div className={classes.logoHorizontallyCenter}>
-              <img src={templogo} className={classes.logo} alt="Logo" />
-            </div>
-          </Link>
-        </Toolbar>
-      </AppBar>
+    <div className={classes.root} style={{width: '100%', height: '100%'}}>
       <Grid container style={{ justifyContent: 'center', marginTop: '25px' }} 
             direction= 'column'
             justify= 'center'
             alignItems= 'center'
             spacing={0}>
-            <Grid item style={{ marginRight: '-40px' }} >
-              <Grid item style={{ marginTop: '10px' }}>
+            <Grid item>
+            <Grid item style={{ marginTop: '10px' }}>
                 <TextField
-                onChange={handleVerificationChange}
-                InputProps={{ classes: { underline: classes.text } }}
-                className={classes.text}
-                name='verification'
-                placeholder='Verification Code'
-                type='text' />
+                  onChange={e => props.setOldPass(e.target.value)}
+                  InputProps={{ classes: { underline: classes.text } }}
+                  error={
+                    (props.create && props.oldpass === '') ||
+                    (props.create && props.oldpass === props.confirm) ||
+                    (props.create && props.oldpass === props.password)}
+                  name='password'
+                  placeholder='Old Password'
+                  type={values.showPassword ? 'text' : 'password'} />
+                  <IconButton
+                    aria-label='toggle password visibility'
+                    onClick={handleClickShowPassword}
+                    onMouseDown={handleMouseDownPassword}
+                    edge='end'>
+                    {values.showPassword ? <Visibility /> : <VisibilityOff />}
+                  </IconButton>
               </Grid>
-              <Grid item style={{ marginTop: '20px' }}>
+              <Grid item style={{ marginTop: '10px' }}>
                 <TextField
                   onChange={e => props.setPassword(e.target.value)}
                   InputProps={{ classes: { underline: classes.text } }}
                   error={
                     (props.create && props.password === '') ||
-                    (props.create && props.password !== props.confirm)}
+                    (props.create && props.password !== props.confirm) ||
+                    (props.create && props.password === props.oldpass) }
                   name='password'
                   placeholder='New Password'
                   type={values.showPassword ? 'text' : 'password'} />
@@ -135,7 +140,8 @@ function NewPassVerification(props) {
                   InputProps={{ classes: { underline: classes.text } }}
                   error={
                     (props.create && props.confirm === '') ||
-                    (props.create && props.password !== props.confirm)}
+                    (props.create && props.password !== props.confirm) ||
+                    (props.create && props.confirm === props.oldpass) }
                   name='confirm'
                   placeholder='Confirm New Password'
                   type={values.showPassword ? 'text' : 'password'} />
@@ -157,7 +163,7 @@ function NewPassVerification(props) {
             </Grid>
             <Grid item
               style={{ justifyContent: 'center', marginTop: '30px' }}>
-              <Link to='/' style={{ textDecoration: 'none' }}>
+              <Link to='/app/profile' style={{ textDecoration: 'none' }}>
                 <Button className={classes.button}
                   onClick={handleSubmit}
                   variant='text'>Confirm</Button>
@@ -168,4 +174,4 @@ function NewPassVerification(props) {
   )
 }
 
-export default NewPassVerification
+export default ChangePassVerification

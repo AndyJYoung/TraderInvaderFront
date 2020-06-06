@@ -1,8 +1,9 @@
 import React, { } from 'react';
-import { List, ListItem, Toolbar, AppBar, Typography, Button, TextField } from '@material-ui/core'
+import { List, ListItem, Toolbar, AppBar, Typography, Button, TextField, Grid } from '@material-ui/core'
 import { Link } from 'react-router-dom';
 import templogo from '../../templogo.png';
 import { makeStyles } from '@material-ui/core/styles';
+import axios from 'axios'
 
 const useStyles = makeStyles({
   root: {
@@ -61,7 +62,21 @@ const useStyles = makeStyles({
 function Forgot(props) {
   const classes = useStyles();
 
-  const handleSubmit = () => {
+  const UsernameCheck = () => {
+    axios.put(`/users/${props.username}/password/request`, {
+      username: props.username,
+    })
+    .then(function (response) {
+      console.log(response)
+    }).catch(function (error) {
+      console.log(error)
+    })
+  }
+
+  const handleSubmit = () => {   
+    if (props.username !== '') {
+      UsernameCheck(props.username)
+    }
    }
 
   return (
@@ -75,8 +90,12 @@ function Forgot(props) {
           </Link>
         </Toolbar>
       </AppBar>
-      <List>
-        <ListItem style={{ marginTop: '50px' }}>
+      <Grid container style={{ justifyContent: 'center', marginTop: '25px' }} 
+        direction= 'column'
+        justify= 'center'
+        alignItems= 'center'
+        spacing={0}>
+        <Grid item style={{ marginTop: '50px' }}>
             <TextField
               onChange={e => props.setUsername(e.target.value)}
               InputProps={{ classes: { underline: classes.text } }}
@@ -86,23 +105,23 @@ function Forgot(props) {
               placeholder='Username '
               type='text'
               autoComplete='off' />
-          </ListItem>
+          </Grid>
         {props.create && (
-          <ListItem>
+          <Grid item>
             <Typography
               style={{ fontSize: 12, color: 'red' }} >
               information entered is incomplete
                         </Typography>
-          </ListItem>)}
-        <ListItem
+          </Grid>)}
+        <Grid item
           style={{ justifyContent: 'center', marginTop: '30px' }}>
           <Link to='/newpassverification' style={{ textDecoration: 'none' }}>
             <Button className={classes.button}
               onClick={handleSubmit}
               variant='text'>Submit</Button>
           </Link>
-        </ListItem>
-      </List>
+        </Grid>
+      </Grid>
     </div>
   )
 }
